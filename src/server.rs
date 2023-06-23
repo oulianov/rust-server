@@ -1,3 +1,5 @@
+// crate means the 'root' of the folder
+use crate::http::Request;
 use std::io::Read;
 use std::net::TcpListener;
 
@@ -69,7 +71,18 @@ impl Server {
                     match stream.read(&mut buffer) {
                         Ok(_) => {
                             // from_utf8_lossy replaces invalid characters with a default one
-                            println!("Received a request: {}", String::from_utf8_lossy(&buffer))
+                            println!("Received a request: {}", String::from_utf8_lossy(&buffer));
+
+                            // Convert to slice explicitely with the as keyword
+                            // Request::try_from(&buffer as &[u8]);
+                            // or directly convert to byte slice by slicing the whole array
+                            // Request::try_from(&buffer[..]);
+                            // Another way is to use try_into on the object, and specifying in the result variable the type
+                            // let res: &Result<Request, _> = &buffer[..].try_into();
+                            match Request::try_from(&buffer[..]) {
+                                Ok(request) => {}
+                                Err(e) => println!("Failed to parse a request: {}", e),
+                            }
                         }
                         Err(e) => println!("Failed to read from connexion: {}", e),
                     }
