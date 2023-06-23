@@ -1,4 +1,4 @@
-use super::method::Method;
+use super::method::{Method, MethodError};
 use std::convert::TryFrom;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
@@ -54,11 +54,39 @@ impl TryFrom<&[u8]> for Request {
         // But we can also use
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         // note that we're overwriting the value of request. This is called variable shadowing
-        let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
 
         if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
+        }
+
+        // implementing from_str gave use the .parse method for free
+        let method: Method = method.parse()?;
+
+        // One way to split the path is like this. We only care if we find stuff
+        // let mut query_string = None;
+        // match path.find('?') {
+        //     Some(i) => {
+        //         query_string = Some(&path[i + 1..]);
+        //         path = &path[..i];
+        //     }
+        //     None => {}
+        // }
+
+        // A way to avoid None => {} line, we can do :
+        // let q = path.find('?');
+        // if q.is_some() {
+        //     let i = q.unwrap();
+        //     query_string = Some(&path[i + 1..]);
+        //     path = &path[..i];
+        // }
+
+        // we can even make this simpler with the syntax if let
+        let mut query_string = None;
+        if let Some(i) = path.find('?') {
+            query_string = Some(&path[i + 1..]);
+            path = &path[..i];
         }
 
         unimplemented!()
@@ -115,6 +143,12 @@ impl ParseError {
 impl From<Utf8Error> for ParseError {
     fn from(_: Utf8Error) -> Self {
         Self::InvalidEncoding
+    }
+}
+
+impl From<MethodError> for ParseError {
+    fn from(_: MethodError) -> Self {
+        Self::InvalidMethod
     }
 }
 
