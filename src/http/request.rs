@@ -45,11 +45,53 @@ impl TryFrom<&[u8]> for Request {
         // be converted to a ParseError using the .from_type implementation, so we can just do:
         let request = str::from_utf8(buffer)?;
 
+        // The naive way to implement the get_next_word iteration is like this
+        // match get_next_word(request) {
+        //     Some((method, request)) => {}
+        //     None => return Err(ParseError::InvalidRequest),
+        // }
+
+        // But we can also use
+        let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        // note that we're overwriting the value of request. This is called variable shadowing
+        let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+
+        if protocol != "HTTP/1.1" {
+            return Err(ParseError::InvalidProtocol);
+        }
+
         unimplemented!()
     }
 
     // Note: the compiler will implement TryInto based on this implementation for the byte slice type
     // (reciprocal property)
+}
+
+fn get_next_word(request: &str) -> Option<(&str, &str)> {
+    // A naive loop is the following
+    // let mut iter = request.chars();
+    // loop {
+    //     let item = iter.next();
+    //     match item {
+    //         Some(c) => {}
+    //         None => break,
+    //     }
+    // }
+
+    // Alternatively just use a for loop
+    // .enumerate is similar to python
+    for (i, c) in request.chars().enumerate() {
+        // \r is carriage return, aka new line
+        if c == ' ' || c == '\r' {
+            // Note: the lower-bound is inclusive. So we can add 1 to the index
+            // however, the strings are byte indexed, not character indexed. Splitting along a non-character boundary will fail.
+            // Here it's ok since we are splitting over spaces
+            return Some((&request[..i], &request[i + 1..]));
+        }
+    }
+    // Return None
+    None
 }
 
 pub enum ParseError {
