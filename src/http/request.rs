@@ -1,5 +1,8 @@
 use super::method::Method;
 use std::convert::TryFrom;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+
 pub struct Request {
     path: String,
     // There is no null in Rust
@@ -16,7 +19,7 @@ pub struct Request {
 // But we actually have other constructions from the standard library
 // More idiomatic rust
 impl TryFrom<&[u8]> for Request {
-    type Error = String;
+    type Error = ParseError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         // If not implement and want to add a WIP, use the unimplemented! macro
@@ -26,3 +29,35 @@ impl TryFrom<&[u8]> for Request {
     // Note: the compiler will implement TryInto based on this implementation for the byte slice type
     // (reciprocal property)
 }
+
+pub enum ParseError {
+    InvalidRequest,
+    InvalidEncoding,
+    InvalidProtocol,
+    InvalidMethod,
+}
+
+impl ParseError {
+    fn message(&self) -> &str {
+        match self {
+            Self::InvalidRequest => "InvalidRequest",
+            Self::InvalidEncoding => "InvalidEncoding",
+            Self::InvalidProtocol => "InvalidProtocol",
+            Self::InvalidMethod => "InvalidMethod",
+        }
+    }
+}
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.message())
+    }
+}
+
+impl Debug for ParseError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.message())
+    }
+}
+
+impl Error for ParseError {}

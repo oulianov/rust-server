@@ -84,6 +84,8 @@ impl Server {
                                 Err(e) => println!("Failed to parse a request: {}", e),
                             }
                         }
+                        // :? formatter uses the debug representation instead of the display one
+                        // Err(e) => println!("Failed to read from connexion: {:?}", e),
                         Err(e) => println!("Failed to read from connexion: {}", e),
                     }
                 }
