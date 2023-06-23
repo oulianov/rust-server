@@ -26,3 +26,30 @@ impl Server {
         println!("Listening on {}", self.address)
     }
 }
+
+struct Request {
+    path: String,
+    // There is no null in Rust
+    // To account for absent values, use Option wrapper
+    query_string: Option<String>,
+    method: Method,
+}
+
+enum Method {
+    // In memory, represented by a number
+    GET(String),
+    DELETE,
+    // To skip some numbers:
+    // POST = 5,
+    // And following items would increment from 5
+    POST,
+    PUT,
+    HEAD,
+    // We can store different value types for every enum
+    // GET(String),
+    // DELETE(u64),
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    PATCH,
+}
