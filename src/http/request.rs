@@ -5,11 +5,11 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::str;
 use std::str::Utf8Error;
 
-pub struct Request {
-    path: String,
+pub struct Request<'buf> {
+    path: &'buf str,
     // There is no null in Rust
     // To account for absent values, use Option wrapper
-    query_string: Option<String>,
+    query_string: Option<&'buf str>,
     method: Method,
 }
 
@@ -20,10 +20,10 @@ pub struct Request {
 
 // But we actually have other constructions from the standard library
 // More idiomatic rust
-impl TryFrom<&[u8]> for Request {
+impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
 
-    fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(buffer: &'buf [u8]) -> Result<Request<'buf>, Self::Error> {
         // If not implement and want to add a WIP, use the unimplemented! macro
         // unimplemented!()
 
@@ -89,7 +89,11 @@ impl TryFrom<&[u8]> for Request {
             path = &path[..i];
         }
 
-        unimplemented!()
+        Ok(Self {
+            path: path,
+            query_string: query_string,
+            method: method,
+        })
     }
 
     // Note: the compiler will implement TryInto based on this implementation for the byte slice type
