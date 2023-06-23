@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::net::TcpListener;
 
 // Having a file named server.rs is the same as having
@@ -55,9 +56,23 @@ impl Server {
             match listener.accept() {
                 // pass an underscore to ignore a return value (python-style)
                 // Ok((stream, _)) => {
-                Ok((stream, address)) => {
-                    let a = 5;
-                    println!("OK!")
+                Ok((mut stream, _)) => {
+                    // a reference to an array can be passed around, and functions don't need
+                    // to know the exact size of the array.
+                    // a reference to an array is called a slice (similar to strings)
+
+                    // this is how to create an array with only zeros
+                    // we have to specify a value for all element inside the array
+                    let mut buffer = [0; 1024];
+                    // this means that we only read 1024 bytes in the request ! not good for prod.
+
+                    match stream.read(&mut buffer) {
+                        Ok(_) => {
+                            // from_utf8_lossy replaces invalid characters with a default one
+                            println!("Received a request: {}", String::from_utf8_lossy(&buffer))
+                        }
+                        Err(e) => println!("Failed to read from connexion: {}", e),
+                    }
                 }
                 Err(err) => println!("Failed to establish a connection: {}", err),
                 // to catch all other variants (default case in switch case)
