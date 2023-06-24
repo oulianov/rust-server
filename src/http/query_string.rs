@@ -40,7 +40,7 @@ impl<'buf> From<&'buf str> for QueryString<'buf> {
 
                         // since we are de-referencing the value pointed by 'existing',
 
-                        *existing = Value::Multiple(vec![prev_val, val])
+                        *existing = Value::Multiple(vec![prev_value, val])
                     }
                     Value::Multiple(vec) => vec.push(val),
                 })
